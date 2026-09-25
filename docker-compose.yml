@@ -1,0 +1,45 @@
+services:
+
+  room-service:
+    build:
+      context: ./room-service
+    container_name: hotel-room-service
+    ports:
+      - "8001:8001"
+    environment:
+      BOOKING_SERVICE_URL: http://booking-service:8002
+    volumes:
+      - room_data:/app/data
+    restart: unless-stopped
+
+  booking-service:
+    build:
+      context: ./booking-service
+    container_name: hotel-booking-service
+    ports:
+      - "8002:8002"
+    environment:
+      ROOM_SERVICE_URL: http://room-service:8001
+      BILLING_SERVICE_URL: http://billing-service:8003
+    volumes:
+      - booking_data:/app/data
+    restart: unless-stopped
+
+  billing-service:
+    build:
+      context: ./billing-service
+    container_name: hotel-billing-service
+    ports:
+      - "8003:8003"
+    environment:
+      ROOM_SERVICE_URL: http://room-service:8001
+      BOOKING_SERVICE_URL: http://booking-service:8002
+    volumes:
+      - billing_data:/app/data
+    restart: unless-stopped
+
+
+volumes:
+  room_data:
+  booking_data:
+  billing_data:
