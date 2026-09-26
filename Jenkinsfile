@@ -39,6 +39,13 @@ pipeline {
             }
         }
 
+        stage('Wait for Services') {
+            steps {
+                echo 'Waiting for services to start...'
+                sleep time: 10, unit: 'SECONDS'
+            }
+        }
+
         stage('Check Services') {
             steps {
                 echo 'Checking running services...'
@@ -49,21 +56,21 @@ pipeline {
         stage('Test Room Service') {
             steps {
                 echo 'Testing Room Service...'
-                bat 'curl -f http://localhost:8001/'
+                bat 'curl --retry 5 --retry-delay 2 -f http://localhost:8001/'
             }
         }
 
         stage('Test Booking Service') {
             steps {
                 echo 'Testing Booking Service...'
-                bat 'curl -f http://localhost:8002/'
+                bat 'curl --retry 5 --retry-delay 2 -f http://localhost:8002/'
             }
         }
 
         stage('Test Billing Service') {
             steps {
                 echo 'Testing Billing Service...'
-                bat 'curl -f http://localhost:8003/'
+                bat 'curl --retry 5 --retry-delay 2 -f http://localhost:8003/'
             }
         }
     }
@@ -74,15 +81,17 @@ pipeline {
             echo '=========================================='
             echo 'HOTEL MANAGEMENT DEPLOYMENT SUCCESSFUL!'
             echo '=========================================='
+            bat 'docker compose ps'
         }
 
         failure {
             echo '=========================================='
             echo 'JENKINS PIPELINE FAILED'
-            echo 'Check the Console Output.'
             echo '=========================================='
-
+            echo 'Showing container status...'
             bat 'docker compose ps'
+            echo 'Showing recent container logs...'
+            bat 'docker compose logs --tail=50'
         }
     }
 }
